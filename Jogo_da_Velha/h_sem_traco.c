@@ -233,7 +233,7 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
             }
 
             printf("O jogador 1 não perde esse tabuleiro com probabilidade %.4f\n", (float)jog_1_aux/(float)conta_terminal_aux);
-            printf("O jogador 1 não perde com probabilidade %.4f\n", (float)(*conta_h)/(float)(*total_h));
+            printf("\nO jogador 1 não perde com probabilidade %.4f\n", (float)(*conta_h)/(float)(*total_h));
             printf("O número total de casos analisados com h sem traço é: %d\n", (*total_h));
 
             for(int i = 0; i < 3; i++) {
