@@ -9,6 +9,25 @@ Tabuleiro numa Matriz   -> (-1) vazio
                         -> 1 jogador "X"
 */
 
+//Função que adiciona delay ao progrma. Usada principalmente para testes de recursão
+void delay(int mili_seconds) {
+    
+    long int micro_seconds = 1000*mili_seconds;
+    
+    clock_t start_time = clock();
+    
+    while(clock() < start_time + micro_seconds);
+
+}
+
+//Estrutura que armazena certa posição do tabuleiro. Tipicamente utilizada para fazer testes com o último movimento
+typedef struct posicao{
+    
+    int i;
+    int j;
+
+}Posicao;
+
 /*Devolve 1 se estamos num estado terminal e o jogador "X" ganhou, 0 se estamos num estado terminal e o jogador "O" ganhou,
 -1 se o jogo empatou e -2 se não é um estado terminal.*/
 int terminal_state(int** tab) {
@@ -169,7 +188,7 @@ void simula_jogo_a_partir(int jogador, int** tab, int* conta_terminal_aux, int* 
 }
 
 //Simula o jogo rodando todas as possíveis interações entre os jogadores num tabuleiro de jogo da velha
-void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
+void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h, Posicao posicao_i_j, int aleatoriedade) {
 
     int terminal = terminal_state(tab);
 
@@ -187,11 +206,18 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
             else
                 arg_2 = 1;
 
-        //Testa se tabuleiro tem h_sem_traco de jogador 1 ("X")
+        //Testa se tabuleiro tem h_sem_traco de jogador 1 ("X") antes da última jogada
+        int aux = tab[posicao_i_j.i][posicao_i_j.j];
+        tab[posicao_i_j.i][posicao_i_j.j] = -1;
         if(h_sem_traco(tab))
             arg_3 = 1;
+        tab[posicao_i_j.i][posicao_i_j.j] = aux;
 
-        constroi_cena(arg_1, arg_2, arg_3);
+        if(arg_3 == 1) {
+            int aleatorio = rand()%aleatoriedade;
+            if(aleatorio < 4)
+                constroi_cena(arg_1, arg_2, arg_3);
+        }
 
     }
 
@@ -218,11 +244,12 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
             }
 
             /*Simula jogo a partir de um estado de h sem traço para o jogador 1 ("X") na vez do jogador 2 ("O") e incremente contagem total
-            de casos de jogador um não perdendo e estados h sem traço para o jogador 1 respectivamente*/
+            de casos de jogador 1 não perdendo e estados h sem traço para o jogador 1 respectivamente*/
             simula_jogo_a_partir(jogador, tab_aux, &conta_terminal_aux, &jog_1_aux);
             (*conta_h) += jog_1_aux;
             (*total_h) += conta_terminal_aux;
 
+            /*
             //Imprime o tabuleiro a ser analisado
             printf("\n");
             for(int i = 0; i < 3; i++) {
@@ -231,10 +258,13 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
                 }
                 printf("\n");
             }
+            */
 
+            /*
             printf("O jogador 1 não perde esse tabuleiro com probabilidade %.4f\n", (float)jog_1_aux/(float)conta_terminal_aux);
             printf("\nO jogador 1 não perde com probabilidade %.4f\n", (float)(*conta_h)/(float)(*total_h));
             printf("O número total de casos analisados com h sem traço é: %d\n", (*total_h));
+            */
 
             for(int i = 0; i < 3; i++) {
                 free(tab_aux[i]);
@@ -248,7 +278,9 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
             for(int j = 0; j < 3; j++) {
                 if(tab[i][j] == -1) {
                     tab[i][j] = jogador;
-                    simula_jogo(1-jogador, tab, conta_h, total_h);
+                    posicao_i_j.i = i;
+                    posicao_i_j.j = j;
+                    simula_jogo(1-jogador, tab, conta_h, total_h, posicao_i_j, aleatoriedade);
                     tab[i][j] = -1;
                 }
             }
@@ -259,31 +291,59 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h) {
 
 int main() {
 
-    //Constroi a matriz de tabuleiro e inicializa todos as posições em -1 (vazio)
-    int** tab = malloc(3*sizeof(int*));
-    for(int i = 0; i < 3; i++) {
-        tab[i] = malloc(3*sizeof(int));
-    }
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            tab[i][j] = -1;
+    //Inicializa randomicidade ao programa
+    srand(time(NULL));
+    int aleatoriedade = 5;
+
+    for(int aux = 0; aux < 100; aux++) {
+        //Constroi a matriz de tabuleiro e inicializa todos as posições em -1 (vazio)
+        int** tab = malloc(3*sizeof(int*));
+        for(int i = 0; i < 3; i++) {
+            tab[i] = malloc(3*sizeof(int));
         }
+        for(int i = 0; i < 3; i++) {
+            for(int j = 0; j < 3; j++) {
+                tab[i][j] = -1;
+            }
+        }
+
+        /*Inicializa a contagem de não derrotas com o tabuleiro em h sem traço para o jogador 1 ("X") e a contagem de configurações de tabuleiro
+        em que havia h sem traço para o jogador 1*/
+        int conta_h = 0, total_h = 0;
+
+        //Inicializa estrutura que servirá de teste para ver se o h_sem_traco foi atingido apenas na última rodada ou antes dela
+        Posicao posicao_i_j;
+        posicao_i_j.i = 0;
+        posicao_i_j.j = 0;
+
+        //Simula o jogo
+        simula_jogo(1, tab, &conta_h, &total_h, posicao_i_j, aleatoriedade);
+
+        //Testa qual a probabilidade do jogador 1 ("X") ganhar baseado nas cenas que foram obtidas
+        double testa = h_sem_traco_e_not_jog_1_prob();
+
+        /*
+        if(testa == -1)
+            printf("Não tivemos exemplos de h se traço dessa vez....\n");
+        else
+            printf("\nO programa diz que o jogador 1 não perde com probabilidade %.4lf\n", testa);
+        */
+
+        //Limpando os arquivos
+        FILE* arq1 = fopen("cenas_sem_tab.txt", "w");
+        fclose(arq1);
+
+        //Escrevendo o arquivo de plotagem
+        FILE* arq2 = fopen("plot.dat", "a+");
+        fprintf(arq2, "%.4lf    %.4lf\n", (float)400/(float)aleatoriedade, testa);
+        fclose(arq2);
+
+        /*
+        arq2 = fopen("plot.dat", "w");
+        fclose(arq2);
+        */
+
     }
-
-    /*Inicializa a contagem de não derrotas com o tabuleiro em h sem traço para o jogador 1 ("X") e a contagem de configurações de tabuleiro
-    em que havia h sem traço para o jogador 1*/
-    int conta_h = 0, total_h = 0;
-
-    //Simula o jogo
-    simula_jogo(1, tab, &conta_h, &total_h);
-
-    //Testa qual a probabilidade do jogador 1 ("X") ganhar baseado nas cenas que foram obtidas
-    double testa = h_sem_traco_e_not_jog_1_prob();
-
-    if(testa == -1)
-        printf("Não tivemos exemplos de h se traço dessa vez....\n");
-    else
-        printf("\nO programa diz que o jogador 1 não perde com probabilidade %.4lf\n", testa);
 
     return 0;
 
