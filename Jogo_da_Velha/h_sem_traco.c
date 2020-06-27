@@ -215,7 +215,7 @@ void simula_jogo(int jogador, int** tab, int* conta_h, int* total_h, Posicao pos
 
         if(arg_3 == 1) {
             int aleatorio = rand()%aleatoriedade;
-            if(aleatorio < 4)
+            if(aleatorio == 0)
                 constroi_cena(arg_1, arg_2, arg_3);
         }
 
@@ -293,7 +293,7 @@ int main() {
 
     //Inicializa randomicidade ao programa
     srand(time(NULL));
-    int aleatoriedade = 5;
+    int aleatoriedade = 10;
 
     for(int aux = 0; aux < 100; aux++) {
         //Constroi a matriz de tabuleiro e inicializa todos as posições em -1 (vazio)
@@ -335,7 +335,7 @@ int main() {
 
         //Escrevendo o arquivo de plotagem
         FILE* arq2 = fopen("plot.dat", "a+");
-        fprintf(arq2, "%.4lf    %.4lf\n", (float)400/(float)aleatoriedade, testa);
+        fprintf(arq2, "%.4lf    %.4lf\n", ((float)100/(float)aleatoriedade), testa);
         fclose(arq2);
 
         /*
