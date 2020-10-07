@@ -177,6 +177,16 @@ int sequencia_de_dois(int jogador, int** tab) {
     return 0;
 }
 
+//Funçõ para imprimir o tabuleiro na tela
+void printa_tabuleiro(int** tab) {
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			printf("%d ", tab[i][j]);
+		}
+		printf("\n");
+	}
+}
+
 //Função de comparação para uso em qsort() 
 int cmpfunc (const void * a, const void * b) {
    return ( *(int*)a - *(int*)b );
@@ -187,46 +197,56 @@ int main() {
 	srand(time(NULL));
 
 	int jogador = 1;
-	int conta_terminal = 0;
-	int jog_1_vence = 0; int jog_2_vence = 0;
 
 	int** tab = malloc(3*sizeof(int*));
 	for(int i = 0; i < 3; i++) {
 	    tab[i] = malloc(3*sizeof(int));
 	}
-	for(int i = 0; i < 3; i++) {
-	    for(int j = 0; j < 3; j++) {
-	        tab[i][j] = -1;
-	    }
+
+	int H_tam = 32;
+	int* classe_hipoteses = malloc(H_tam*sizeof(int));
+	for(int i = 0; i < H_tam; i++) {
+		classe_hipoteses[i] = 0;
 	}
 
-	int H_tam = H_tam;
-	int classe_hipoteses[H_tam] = { 0 };
-
-	int m = 26;
+	int m = 10;
 
 	for(int w = 0; w < m; w++) {
+
+		for(int i = 0; i < 3; i++) {
+	    	for(int j = 0; j < 3; j++) {
+	        	tab[i][j] = -1;
+	    	}
+		}
 
 		int terminal = terminal_state(tab);
 		while(terminal == -2) {
 			int aux_i = rand()%3;
 			int aux_j = rand()%3;
 			while(tab[aux_i][aux_j] != -1) {
-				int aux_i = rand()%3;
-				int aux_j = rand()%3;
+				aux_i = rand()%3;
+				aux_j = rand()%3;
 			}
 			tab[aux_i][aux_j] = jogador;
 			jogador = 1 - jogador;
 			terminal = terminal_state(tab);
-			if((int r = rand()%100) == 0)
+			int r = rand()%100;
+			if(r == 0)
 				break;
 		}
+
+		
+		printf("\n");
+		printf("%d\n", terminal);
+		printa_tabuleiro(tab);
+		
 
 		int vetor_bits[5] = {0, 0, 0, 0, 0};
 		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
 		int indice = 0;
 
 		for(int i = 0; i < H_tam; i++) {
+			p_0 = 0; p_1 = 0; p_2 = 0; p_3 = 0; p_4 = 0;
 			if(vetor_bits[0])
 				p_0 = horizontal(tab);
 			if(vetor_bits[1])
@@ -251,7 +271,7 @@ int main() {
 			for(int j = 4; j >= 0; j--) {
 				if(vetor_bits[j])
 					vetor_bits[j] = 0;
-				if(!vetor_bits[j]) {
+				else if(!vetor_bits[j]) {
 					vetor_bits[j] = 1;
 					break;
 				}
@@ -268,7 +288,10 @@ int main() {
 	}
 
 	int aux_indice = 0;
-	int ERM[32] = { 0 }
+	int* ERM = malloc(H_tam*sizeof(int));
+	for(int i = 0; i < H_tam; i++) {
+		ERM[i] = -1;
+	}
 	for(int i = 0; i < H_tam; i++) {
 		if(classe_hipoteses[i] == min) {
 			ERM[aux_indice] = i;
@@ -278,6 +301,11 @@ int main() {
 
 	int h = ERM[rand()%aux_indice];
 	
+	printf("Erro L_s(h) sobre a amostra: %.4f\n", (float)classe_hipoteses[h]/m);
+
+	FILE* ptr = fopen("Erro_PACL.txt", "a+");
+	fprintf(ptr, "%.4f %d\n", (float)classe_hipoteses[h]/m, h);
+	fclose(ptr);
 
 	return 0;
 }
