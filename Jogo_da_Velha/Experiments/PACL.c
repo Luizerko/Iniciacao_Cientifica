@@ -192,6 +192,76 @@ int cmpfunc (const void * a, const void * b) {
    return ( *(int*)a - *(int*)b );
 }
 
+//Recebe um inteiro h e devolve sua versão em binário num vetor
+int* int_to_binary(int h) {
+	int* binario = malloc(5*sizeof(int));
+	int indice = 4;
+	while(h > 1) {
+		binario[indice] = h%2;
+		h = h/2;
+		indice--;
+	}
+	binario[indice] = 1;
+	for(int i = 0; i < indice; i++) {
+		binario[i] = 0;
+	}
+	return binario;
+}
+
+//Simula toda a árvore de estados d'um jogo da velha para calcular sigma de uma certa hipótese escolhida
+void simula_jogo(int jogador, int* vetor_predicados, long int* sigma, long int* estados, int** tab) {
+	int terminal = terminal_state(tab);
+	if(terminal != -2) {
+		(*estados) = (*estados) + 1;
+		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
+
+		if(vetor_predicados[0])
+			p_0 = horizontal(tab);
+		if(vetor_predicados[1])
+			p_1 = vertical(tab);
+		if(vetor_predicados[2])
+			p_2 = diagonal(tab);
+		if(vetor_predicados[3])
+			p_3 = meio_ocupado(1, tab);
+		if(vetor_predicados[4])
+			p_4 = sequencia_de_dois(1, tab);
+
+		if(p_0 || p_1 || p_2 || p_3 || p_4)
+			if(terminal != 1)
+				(*sigma) = (*sigma) + 1;
+	}
+	else {
+		for(int i = 0; i < 3; i++) {
+            for(int j = 0; j < 3; j++) {
+                if(tab[i][j] == -1) {
+					/*
+					(*estados) = (*estados) + 1;
+					int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
+
+					if(vetor_predicados[0])
+						p_0 = horizontal(tab);
+					if(vetor_predicados[1])
+						p_1 = vertical(tab);
+					if(vetor_predicados[2])
+						p_2 = diagonal(tab);
+					if(vetor_predicados[3])
+						p_3 = meio_ocupado(1, tab);
+					if(vetor_predicados[4])
+						p_4 = sequencia_de_dois(1, tab);
+
+					if(p_0 || p_1 || p_2 || p_3 || p_4)
+						(*sigma) = (*sigma) + 1;
+					*/
+
+                    tab[i][j] = jogador;
+                    simula_jogo(1-jogador, vetor_predicados, sigma, estados, tab);
+                    tab[i][j] = -1;
+                }
+            }
+        }
+	}
+}
+
 int main() {
 
 	srand(time(NULL));
@@ -209,7 +279,7 @@ int main() {
 		classe_hipoteses[i] = 0;
 	}
 
-	int m = 10;
+	int m = 26;
 
 	for(int w = 0; w < m; w++) {
 
@@ -235,11 +305,11 @@ int main() {
 				break;
 		}
 
-		
+		/*
 		printf("\n");
 		printf("%d\n", terminal);
 		printa_tabuleiro(tab);
-		
+		*/
 
 		int vetor_bits[5] = {0, 0, 0, 0, 0};
 		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
@@ -303,8 +373,20 @@ int main() {
 	
 	printf("Erro L_s(h) sobre a amostra: %.4f\n", (float)classe_hipoteses[h]/m);
 
+	long int* estados = malloc(sizeof(long int));
+	long int* sigma = malloc(sizeof(long int));
+	(*sigma) = 0;
+	(*estados) = 0;
+	for(int i = 0; i < 3; i++) {
+		for(int j = 0; j < 3; j++) {
+			tab[i][j] = -1;
+		}
+	}
+	int* vetor_predicados = int_to_binary(h);
+	simula_jogo(1, vetor_predicados, sigma, estados, tab);
+
 	FILE* ptr = fopen("Erro_PACL.txt", "a+");
-	fprintf(ptr, "%.4f %d\n", (float)classe_hipoteses[h]/m, h);
+	fprintf(ptr, "%.8f %d\n", (float)(*sigma)/(*estados), h);
 	fclose(ptr);
 
 	return 0;
