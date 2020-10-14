@@ -279,7 +279,7 @@ int main() {
 		classe_hipoteses[i] = 0;
 	}
 
-	int m = 26;
+	int m = 7;
 
 	for(int w = 0; w < m; w++) {
 
