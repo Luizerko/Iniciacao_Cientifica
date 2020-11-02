@@ -226,9 +226,14 @@ void simula_jogo(int jogador, int* vetor_predicados, long int* sigma, long int* 
 		if(vetor_predicados[4])
 			p_4 = sequencia_de_dois(1, tab);
 
-		if(p_0 || p_1 || p_2 || p_3 || p_4)
+		if(p_0 || p_1 || p_2 || p_3 || p_4) {
 			if(terminal != 1)
 				(*sigma) = (*sigma) + 1;
+		}
+		else {
+			if(terminal == 1)
+				(*sigma) = (*sigma) + 1;
+		}
 	}
 	else {
 		for(int i = 0; i < 3; i++) {
@@ -262,9 +267,11 @@ void simula_jogo(int jogador, int* vetor_predicados, long int* sigma, long int* 
 	}
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	srand(time(NULL));
+	long int t = atoi(argv[1]);
+	printf("Execução número: %ld\n", t);
+	srand(time(NULL)+t);
 
 	int jogador = 1;
 
@@ -279,7 +286,7 @@ int main() {
 		classe_hipoteses[i] = 0;
 	}
 
-	int m = 7;
+	int m = 20;
 
 	for(int w = 0; w < m; w++) {
 

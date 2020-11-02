@@ -213,22 +213,26 @@ void simula_jogo(int jogador, int* vetor_predicados, long int* sigma, long int* 
 	int terminal = terminal_state(tab);
 	if(terminal != -2) {
 		(*estados) = (*estados) + 1;
-		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
+		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0;
 
 		if(vetor_predicados[0])
 			p_0 = horizontal(tab);
 		if(vetor_predicados[1])
 			p_1 = vertical(tab);
 		if(vetor_predicados[2])
-			p_2 = diagonal(tab);
+			p_2 = meio_ocupado(1, tab);
 		if(vetor_predicados[3])
-			p_3 = meio_ocupado(1, tab);
-		if(vetor_predicados[4])
-			p_4 = sequencia_de_dois(1, tab);
+			p_3 = sequencia_de_dois(1, tab);
 
-		if(p_0 || p_1 || p_2 || p_3 || p_4)
+		if(p_0 || p_1 || p_2 || p_3) {
 			if(terminal != 1)
 				(*sigma) = (*sigma) + 1;
+		}
+		else {
+			if(terminal == 1)
+				(*sigma) = (*sigma) + 1;
+		}
+		
 	}
 	else {
 		for(int i = 0; i < 3; i++) {
@@ -236,20 +240,18 @@ void simula_jogo(int jogador, int* vetor_predicados, long int* sigma, long int* 
                 if(tab[i][j] == -1) {
 					/*
 					(*estados) = (*estados) + 1;
-					int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
+					int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0;
 
 					if(vetor_predicados[0])
 						p_0 = horizontal(tab);
 					if(vetor_predicados[1])
 						p_1 = vertical(tab);
 					if(vetor_predicados[2])
-						p_2 = diagonal(tab);
+						p_2 = meio_ocupado(1, tab);
 					if(vetor_predicados[3])
-						p_3 = meio_ocupado(1, tab);
-					if(vetor_predicados[4])
-						p_4 = sequencia_de_dois(1, tab);
+						p_3 = sequencia_de_dois(1, tab);
 
-					if(p_0 || p_1 || p_2 || p_3 || p_4)
+					if(p_0 || p_1 || p_2 || p_3)
 						(*sigma) = (*sigma) + 1;
 					*/
 
@@ -262,9 +264,11 @@ void simula_jogo(int jogador, int* vetor_predicados, long int* sigma, long int* 
 	}
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
-	srand(time(NULL));
+	long int t = atoi(argv[1]);
+	printf("Execução número: %ld\n", t);
+	srand(time(NULL)+t);
 
 	int jogador = 1;
 
@@ -273,13 +277,13 @@ int main() {
 	    tab[i] = malloc(3*sizeof(int));
 	}
 
-	int H_tam = 32;
+	int H_tam = 16;
 	int* classe_hipoteses = malloc(H_tam*sizeof(int));
 	for(int i = 0; i < H_tam; i++) {
 		classe_hipoteses[i] = 0;
 	}
 
-	int m = 7;
+	int m = 577;
 
 	for(int w = 0; w < m; w++) {
 
@@ -311,24 +315,22 @@ int main() {
 		printa_tabuleiro(tab);
 		*/
 
-		int vetor_bits[5] = {0, 0, 0, 0, 0};
-		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0, p_4 = 0;
+		int vetor_bits[4] = {0, 0, 0, 0};
+		int p_0 = 0, p_1 = 0, p_2 = 0, p_3 = 0;
 		int indice = 0;
 
 		for(int i = 0; i < H_tam; i++) {
-			p_0 = 0; p_1 = 0; p_2 = 0; p_3 = 0; p_4 = 0;
+			p_0 = 0; p_1 = 0; p_2 = 0; p_3 = 0;
 			if(vetor_bits[0])
 				p_0 = horizontal(tab);
 			if(vetor_bits[1])
 				p_1 = vertical(tab);
 			if(vetor_bits[2])
-				p_2 = diagonal(tab);
+				p_2 = meio_ocupado(1, tab);
 			if(vetor_bits[3])
-				p_3 = meio_ocupado(1, tab);
-			if(vetor_bits[4])
-				p_4 = sequencia_de_dois(1, tab);
+				p_3 = sequencia_de_dois(1, tab);
 
-			if(p_0 || p_1 || p_2 || p_3 || p_4) {
+			if(p_0 || p_1 || p_2 || p_3) {
 				if(terminal != 1)
 					classe_hipoteses[indice]++;
 			}
@@ -338,7 +340,7 @@ int main() {
 			}
 			indice++;
 
-			for(int j = 4; j >= 0; j--) {
+			for(int j = 3; j >= 0; j--) {
 				if(vetor_bits[j])
 					vetor_bits[j] = 0;
 				else if(!vetor_bits[j]) {
@@ -385,7 +387,7 @@ int main() {
 	int* vetor_predicados = int_to_binary(h);
 	simula_jogo(1, vetor_predicados, sigma, estados, tab);
 
-	FILE* ptr = fopen("Erro_PACL.txt", "a+");
+	FILE* ptr = fopen("Erro_APACL.txt", "a+");
 	fprintf(ptr, "%.8f %d\n", (float)(*sigma)/(*estados), h);
 	fclose(ptr);
 

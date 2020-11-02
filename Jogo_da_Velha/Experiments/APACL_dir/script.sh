@@ -1,12 +1,11 @@
 #!/bin/bash
 
-rm Erro_PACL.txt;
+rm Erro_APACL.txt;
 
 make;
 
 for i in $(seq 1 10000); do
-	./APACL;
-	sleep 1;
+	./APACL $i;
 done
 
 make clean;
