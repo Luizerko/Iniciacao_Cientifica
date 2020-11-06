@@ -40,7 +40,7 @@ contador = contador_final
 soma = 0
 prob = 0
 for i in contador.keys():
-    if i != '28':
+    if i != '12' and i != 8:
         prob += contador[i]
     soma += contador[i]
 
@@ -55,14 +55,14 @@ f, a = plt.subplots(2)
 
 a[0].set_xlabel('Chosen hypothesis (h_s)')
 a[0].set_ylabel('Probability')
-a[0].set_title('Histogram of chosen hypothesis with m=577')
+a[0].set_title('Histogram of chosen hypothesis with m=26')
 a[0].bar(contador.keys(), contador.values(), color='blue')
 
 x = dicionario.keys()
 y = dicionario.values()
 a[1].set_xlabel('Chosen hypothesis (h_s)')
 a[1].set_ylabel('Sigma error')
-a[1].set_title('Scatter plot of chosen hypothesis and its error with m=577')
+a[1].set_title('Scatter plot of chosen hypothesis and its error with m=26')
 a[1].scatter(x, y, color="red")
 
 plt.tight_layout()
