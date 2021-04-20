@@ -6,6 +6,7 @@ import seaborn as sns
 import time
 import random
 from copy import copy, deepcopy
+from collections import OrderedDict
 from sklearn.linear_model import Perceptron, LogisticRegression
 
 def empty_tab(tab):
@@ -236,8 +237,6 @@ def perceptron_calculating_2d(x, y, label):
 	df = pd.DataFrame(dict(x=x, y=y, label=label))
 	colors = {1: 'green', -1: 'red'}
 
-	#plt.scatter(df['x'], df['y'], c=df['label'].apply(lambda x: colors[x]))
-
 	clf = Perceptron(tol=1e-3)
 	lista_coord = [[x, y] for x, y in zip(df['x'].to_list(), df['y'].to_list())]
 	clf.fit(lista_coord, df['label'].to_list())
@@ -270,8 +269,7 @@ def perceptron_calculating_3d(x, y, z, label):
 	lista_coord = [[x, y, z] for x, y, z in zip(df['x'].to_list(), df['y'].to_list(), df['z'].to_list())]
 	clf.fit(lista_coord, df['label'].to_list())
 
-	#print(clf.coef_[0])
-
+	'''
 	x_min, x_max = min(x) - 1, max(x) + 1
 	y_min, y_max = min(y) - 1, max(y) + 1
 	xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02), np.arange(y_min, y_max, 0.02))
@@ -294,16 +292,42 @@ def perceptron_calculating_3d(x, y, z, label):
 				df[df['label'] == -1]['z'].to_list(), c=df[df['label'] == -1]['label'].apply(lambda x: colors[x]),
 				label='Não vitória')
 			
-	#ax.scatter(x, y, z, c=df['label'].apply(lambda x: colors[x]), label=['Vitória', 'Não vitória'])
 	ax.set_title('Perceptron 3D')
 	ax.legend()
 
 	plt.show()
+	'''
 
 	return clf
 
-#Função que conta quantas vezes o classificador 
-#def counting_correct_classifiers_perceptron_3d()
+#Função que contabiliza erro associado o classificador passado como parâmetro. 
+def counting_correct_classifiers_perceptron_3d(clf):
+	erro = 0
+
+	#Não vitória
+	if clf.predict([[0, 0, 0]]) != -1:
+		erro += (77904+46080)/255168
+	
+	#Horizontal
+	if clf.predict([[1, 0, 0]]) != 1:
+		erro += 38772/255168
+	#Vertical
+	if clf.predict([[0, 1, 0]]) != 1:
+		erro += 38772/255168
+	#Horizontal e vertical
+	if clf.predict([[1, 1, 0]]) != 1:
+		erro += 5184/255168
+	#Diagonal
+	if clf.predict([[0, 0, 1]]) != 1:
+		erro += 41544/255168
+	#Horizontal e diagonal
+	if clf.predict([[1, 0, 1]]) != 1:
+		erro += 3456/255168
+	#Vertical e diagonal
+	if clf.predict([[0, 1, 1]]) != 1:
+		erro += 3456/255168
+
+	return erro
 
 #Usa a técnica de regressão linear para calcular a probabilidade de cada estado de jogo fornecido ser
 #vitória do jogador 'X'. Essa função também plota a superfície separadora encontrada para atribuir
@@ -347,14 +371,12 @@ empates = 0
 estados_terminais = 0
 dicionario_de_estados = {}
 
-
+'''
 #Simula todos os estados do jogo para testar funcionalidade do programa, bem como
 #conta todos os tipos de estados desejados.
 simulate_every_state(1, tab)
 
-print(len(dicionario_de_estados))
 
-'''
 #131184
 print(vitorias_X)
 #77904
@@ -387,6 +409,9 @@ vitorias_vertical_diagonal = 0
 #conta todos os tipos de estados desejados.
 simulate_every_state(1, tab)
 
+#
+print(nao_vitorias)
+
 #38772
 print(vitorias_horizontal)
 #38772
@@ -401,38 +426,53 @@ print(vitorias_horizontal_diagonal)
 print(vitorias_vertical_diagonal)
 '''
 
+simulate_every_state(1, tab)
+
 #Inicializa o número de jogos que o usuário quer alcançar e gera aleatoriamente
 #esse número de estados finais.
 print('Insira o número de estados que você quer considerar na sua amostra: ')
 m = input()
-x = []
-y = []
-z = []
-label = []
-for i in range(int(m)):
-	iteracao = random.randint(1, 255169)
-	#iteracao = random.randint(1, 2000)
-	
-	#tab_aux = deepcopy(pick_a_state(1, tab))
-	#empty_tab(tab)
-	tab_aux = dicionario_de_estados[iteracao]
+dicionario_conta_erro = {}
+for i in range(100):
+	x = []
+	y = []
+	z = []
+	label = []
+	for i in range(int(m)):
+		iteracao = random.randint(1, 255169)
+		#iteracao = random.randint(1, 2000)
+		
+		#tab_aux = deepcopy(pick_a_state(1, tab))
+		#empty_tab(tab)
+		tab_aux = dicionario_de_estados[iteracao]
 
-	#print_tab(tab_aux)
-	
-	print((horizontal(tab_aux), vertical(tab_aux), diagonal(tab_aux)))
-	x.append(horizontal(tab_aux))
-	y.append(vertical(tab_aux))
-	z.append(diagonal(tab_aux))
-	if terminal_state(tab_aux) == 1:
-		label.append(1)
+		#print_tab(tab_aux)
+		
+		#print((horizontal(tab_aux), vertical(tab_aux), diagonal(tab_aux)))
+		x.append(horizontal(tab_aux))
+		y.append(vertical(tab_aux))
+		z.append(diagonal(tab_aux))
+		if terminal_state(tab_aux) == 1:
+			label.append(1)
+		else:
+			label.append(-1)
+
+	#Chama a função de perceptron para duas dimensões.
+	#clf = perceptron_calculating_2d(x, y, label)
+
+	#Chama a função de perceptron para três dimensões.
+	clf = perceptron_calculating_3d(x, y, z, label)
+	erro = counting_correct_classifiers_perceptron_3d(clf)
+	if "%.3f" % erro in dicionario_conta_erro.keys():
+		dicionario_conta_erro["%.3f" % erro] += 1
 	else:
-		label.append(-1)
+		dicionario_conta_erro["%.3f" % erro] = 1
+	#Chama a função de regressão logística para três dimensões.
+	#clf = linear_regression_calculating(x, y, z, label)
 
-#Chama a função de perceptron para duas dimensões.
-#clf = perceptron_calculating_2d(x, y, label)
-
-#Chama a função de perceptron para três dimensões.
-clf = perceptron_calculating_3d(x, y, z, label)
-
-#Chama a função de regressão logística para três dimensões.
-#clf = linear_regression_calculating(x, y, z, label)
+for i in dicionario_conta_erro.keys():
+	dicionario_conta_erro[i] = dicionario_conta_erro[i]/100
+dicionario_conta_erro = OrderedDict(sorted(dicionario_conta_erro.items()))
+print(dicionario_conta_erro)
+plt.bar(dicionario_conta_erro.keys(), dicionario_conta_erro.values())
+plt.show()
