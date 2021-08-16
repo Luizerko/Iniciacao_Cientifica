@@ -116,6 +116,49 @@ def diagonal(tab):
 
 	return 0
 
+#Retorna a lista com 9 valores indicando a presença ou a ausência do X em certa
+#casa do tabuleiro. Ilustração de conversão de tabuleiro para lista:
+#Tabuleiro: -------------------
+#			|(0,0)|(0,1)|(0,2)|
+#			-------------------
+#			|(1,0)|(1,1)|(1,2)|
+#			-------------------
+#			|(2,0)|(2,1)|(2,2)|
+#			-------------------
+#lista: [(0,0), (0,1), (0,2), (1,0), (1,1), (1,2), (2,0), (2,1), (2,2)]
+def tab_to_positions(tab):
+	pos_00 = 0
+	pos_01 = 0
+	pos_02 = 0
+	pos_10 = 0
+	pos_11 = 0
+	pos_12 = 0
+	pos_20 = 0
+	pos_21 = 0
+	pos_22 = 0
+
+	if tab[0][0] == 1:
+		pos_00 = 1
+	if tab[0][1] == 1:
+		pos_01 = 1
+	if tab[0][2] == 1:
+		pos_02 = 1
+	if tab[1][0] == 1:
+		pos_10 = 1
+	if tab[1][1] == 1:
+		pos_11 = 1
+	if tab[1][2] == 1:
+		pos_12 = 1
+	if tab[2][0] == 1:
+		pos_20 = 1
+	if tab[2][1] == 1:
+		pos_21 = 1
+	if tab[2][2] == 1:
+		pos_22 = 1
+
+	return [pos_00, pos_01, pos_02, pos_10, pos_11, pos_12, pos_20, pos_21, pos_22]
+
+
 #Printa o estado do tabuleiro
 def print_tab(tab):
 
@@ -269,39 +312,43 @@ def perceptron_calculating_3d(x, y, z, label):
 	lista_coord = [[x, y, z] for x, y, z in zip(df['x'].to_list(), df['y'].to_list(), df['z'].to_list())]
 	clf.fit(lista_coord, df['label'].to_list())
 
-	'''
-	x_min, x_max = min(x) - 1, max(x) + 1
-	y_min, y_max = min(y) - 1, max(y) + 1
-	xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02), np.arange(y_min, y_max, 0.02))
-	if clf.coef_[0][2] > 0:
-		Z = (-clf.coef_[0][0]*xx - clf.coef_[0][1]*yy)/clf.coef_[0][2]
-	else:
-		Z = (-clf.coef_[0][0]*xx - clf.coef_[0][1]*yy)/1e-15
+	global grafico
 
-	plt3d = plt.figure().gca(projection='3d')
-	plt3d.plot_surface(xx, yy, Z, alpha=0.4)
-	ax = plt.gca()
+	if(random.randint(1, 1001) > 999 and grafico == 0):
+		grafico = 1
 
-	for estado in ['vitoria', 'nao_vitoria']:
-		if estado == 'vitoria':
-			ax.scatter(df[df['label'] == 1]['x'].to_list(), df[df['label'] == 1]['y'].to_list(),
-				df[df['label'] == 1]['z'].to_list(), c=df[df['label'] == 1]['label'].apply(lambda x: colors[x]),
-				label='Vitória')
+		x_min, x_max = min(x) - 1, max(x) + 1
+		y_min, y_max = min(y) - 1, max(y) + 1
+		xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.02), np.arange(y_min, y_max, 0.02))
+		if clf.coef_[0][2] > 0:
+			Z = (-clf.coef_[0][0]*xx - clf.coef_[0][1]*yy)/clf.coef_[0][2]
 		else:
-			ax.scatter(df[df['label'] == -1]['x'].to_list(), df[df['label'] == -1]['y'].to_list(),
-				df[df['label'] == -1]['z'].to_list(), c=df[df['label'] == -1]['label'].apply(lambda x: colors[x]),
-				label='Não vitória')
-			
-	ax.set_title('Perceptron 3D')
-	ax.legend()
+			Z = (-clf.coef_[0][0]*xx - clf.coef_[0][1]*yy)/1e-15
 
-	plt.show()
-	'''
+		plt3d = plt.figure().gca(projection='3d')
+		plt3d.plot_surface(xx, yy, Z, alpha=0.4)
+		ax = plt.gca()
+
+		for estado in ['vitoria', 'nao_vitoria']:
+			if estado == 'vitoria':
+				ax.scatter(df[df['label'] == 1]['x'].to_list(), df[df['label'] == 1]['y'].to_list(),
+					df[df['label'] == 1]['z'].to_list(), c=df[df['label'] == 1]['label'].apply(lambda x: colors[x]),
+					label='Vitória')
+			else:
+				ax.scatter(df[df['label'] == -1]['x'].to_list(), df[df['label'] == -1]['y'].to_list(),
+					df[df['label'] == -1]['z'].to_list(), c=df[df['label'] == -1]['label'].apply(lambda x: colors[x]),
+					label='Não vitória')
+				
+		ax.set_title('Perceptron 3D')
+		ax.legend()
+
+		plt.show()
+	
 
 	return clf
 
 #Função que contabiliza erro associado o classificador passado como parâmetro. 
-def counting_correct_classifiers_perceptron_3d(clf):
+def counting_error_classifiers_perceptron_3d(clf):
 	erro = 0
 
 	#Não vitória
@@ -329,10 +376,10 @@ def counting_correct_classifiers_perceptron_3d(clf):
 
 	return erro
 
-#Usa a técnica de regressão linear para calcular a probabilidade de cada estado de jogo fornecido ser
+#Usa a técnica de regressão logística para calcular a probabilidade de cada estado de jogo fornecido ser
 #vitória do jogador 'X'. Essa função também plota a superfície separadora encontrada para atribuir
 #probabilidades e os ponstos amostrais utilizados (R³).
-def linear_regression_calculating(x, y, z, label):
+def logistic_regression_calculating(x, y, z, label):
 	df = pd.DataFrame(dict(x=x, y=y, z=z, label=label))
 
 	lista_coord = [[x, y, z] for x, y, z in zip(df['x'].to_list(), df['y'].to_list(), df['z'].to_list())]
@@ -358,6 +405,32 @@ def linear_regression_calculating(x, y, z, label):
 
 	return clf
 
+#Usa técnica de regressão logística para calcular o hiperplano separador num espaço de nove
+#dimensões, cada uma delas uma casa do tabuleiro de jogo da velha.
+def logistic_regression_9d(X, label):
+	
+	clf = LogisticRegression()
+	clf.fit(X, label)
+
+	print(clf.predict_proba(np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1]])))
+
+	if clf.predict_proba(np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1]]))[0][0] > 0.5:
+		return clf, 0
+	
+	else:
+		return clf, 1
+
+#Função que contabiliza erro associado o classificador passado como parâmetro.
+def counting_error_logistic_regression_9d(clf, param):
+	global dicionario_de_estados
+	erro = 0
+	for i in dicionario_de_estados.values():
+		if clf.predict_proba(np.array([tab_to_positions(i)]))[0][param] > 0.5 and terminal_state(i) != 1:
+			erro += 1
+		elif clf.predict_proba(np.array([tab_to_positions(i)]))[0][param] < 0.5 and terminal_state(i) == 1:
+			erro += 1
+
+	return erro/255168
 
 #Inicializa tabuleiro vazio
 tab = np.array([[-1, -1, -1], [-1, -1, -1], [-1, -1, -1]])
@@ -433,7 +506,10 @@ simulate_every_state(1, tab)
 print('Insira o número de estados que você quer considerar na sua amostra: ')
 m = input()
 dicionario_conta_erro = {}
-for i in range(100):
+grafico = 0
+
+'''
+for i in range(1000):
 	x = []
 	y = []
 	z = []
@@ -462,17 +538,34 @@ for i in range(100):
 
 	#Chama a função de perceptron para três dimensões.
 	clf = perceptron_calculating_3d(x, y, z, label)
-	erro = counting_correct_classifiers_perceptron_3d(clf)
+	erro = counting_error_classifiers_perceptron_3d(clf)
 	if "%.3f" % erro in dicionario_conta_erro.keys():
 		dicionario_conta_erro["%.3f" % erro] += 1
 	else:
 		dicionario_conta_erro["%.3f" % erro] = 1
 	#Chama a função de regressão logística para três dimensões.
-	#clf = linear_regression_calculating(x, y, z, label)
+	#clf = logistic_regression_calculating(x, y, z, label)
 
 for i in dicionario_conta_erro.keys():
-	dicionario_conta_erro[i] = dicionario_conta_erro[i]/100
+	dicionario_conta_erro[i] = dicionario_conta_erro[i]/1000
 dicionario_conta_erro = OrderedDict(sorted(dicionario_conta_erro.items()))
 print(dicionario_conta_erro)
 plt.bar(dicionario_conta_erro.keys(), dicionario_conta_erro.values())
+plt.title('Distribution of errors m=26')
+plt.xlabel('Error')
+plt.ylabel('Probability')
 plt.show()
+'''
+
+for i in range(20):
+	X = []
+	label = []
+	for i in range(int(m)):
+		iteracao = random.randint(1, 255169)
+		tab_aux = dicionario_de_estados[iteracao]
+
+		X.append(tab_to_positions(tab_aux))
+		label.append(0 if terminal_state(tab_aux) != 1 else 1)
+
+	clf, param = logistic_regression_9d(X, label)
+	print(counting_error_logistic_regression_9d(clf, param))
